@@ -181,19 +181,19 @@ app.use("/forum", ensureAuthenticated, Contributor, forumRoutes)
 app.use("/promotions", ensureAuthenticated, Contributor, promotionsRoutes)
 
 
-// // //Port For the Application
-// const port = process.env.PORT || 3000
+// //Port For the Application
+const port = process.env.PORT || 3000
 
-// app.listen(port, () => console.log("The server is live on http://127.0.0.1:3000/"))
+app.listen(port, () => console.log("The server is live on http://127.0.0.1:3000/"))
 
-var server = require('http').Server(app);
-var io = require('socket.io')(server);
+// var server = require('http').Server(app);
+// var io = require('socket.io')(server);
 
-server.listen(process.env.PORT || 3000);
+// server.listen(process.env.PORT || 3000);
 
-io.on('connection', function ( socket ) {
-  socket.emit('news', { hello: 'world' });
-  socket.on('my other event', function (data) {
+// io.on('connection', function ( socket ) {
+//   socket.emit('news', { hello: 'world' });
+//   socket.on('my other event', function (data) {
     
-  });
-})
+//   });
+// })
