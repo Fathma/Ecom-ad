@@ -15,14 +15,15 @@ exports.emailAllPage = ( req, res )=> res.render('customer/emailAll')
 
 // view list of customers
 exports.viewListOfCustomers =async (req, res) => {
-    let customers = await Customerr.find().select({ email: 1, profile:1, contact:1, status:1, _id:1})
+    let customers = (await Customerr.find().select({ email: 1, profile:1, contact:1, status:1, _id:1})).map(user=>{ return user.toJSON() })
     var new_cus = []
     
     // getting all customers wishlist
     for(var i=0; i<customers.length; i++){
         var data = customers[i]
-        let wishlist = await Wishlist.findOne({ owner: customers[i]._id }).populate('items.product')
+        let wishlist = await Wishlist.findOne({ owner: customers[i]._id }).populate('items.product') 
         if(wishlist){
+            wishlist = wishlist.toJSON()
             data.items = wishlist.items
         }
         new_cus.push(data)
@@ -38,7 +39,7 @@ exports.viewListOfCustomers =async (req, res) => {
 // email all customer at once
 exports.emailAll =async ( req, res )=>{
     let emails = [] 
-    let customers = await Customerr.find()
+    let customers = (await Customerr.find()).map(user=>{ return user.toJSON() })
 
     customers.map( customer =>{
         emails.push(customer.email)
@@ -51,10 +52,13 @@ exports.emailAll =async ( req, res )=>{
 // shows all info of a customer
 exports.getprofile =async (req, res)=>{
     
-    var customer = await Customerr.findOne({ _id: req.params.id })
-    var posts = await Post.find({ user: req.params.id })
-    var orders = await Order.find({ user: req.params.id })
+    var customer = (await Customerr.findOne({ _id: req.params.id })).toJSON()
+    var posts = (await Post.find({ user: req.params.id })).map(user=>{ return user.toJSON() })
+    var orders = (await Order.find({ user: req.params.id })).map(user=>{ return user.toJSON() })
     var wishlists = await Wishlist.findOne({ owner: req.params.id }).populate('items.product')
+    if(wishlists){
+        wishlists = wishlists.toJSON()
+    }
     var count = 1
 
     customer.shippingAddress.map(shippingAddress=>{

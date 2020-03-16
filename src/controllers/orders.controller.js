@@ -46,7 +46,7 @@ exports.showOrdersPage = (req, res) => {
 exports.OrdersByMonthPage = async(req, res) => {
   let month =parseInt(req.body.startDate.split('/')[0], 10)
   let year =parseInt(req.body.startDate.split('/')[1], 10)
-  let orders =await Order.find().populate('user');
+  let orders =(await Order.find().populate('user')).map(doc=>{ return doc.toJSON() })
 
   let orderlist = orders.filter((data)=>{
     if(new Date(data.created).getMonth()+1 === month && new Date(data.created).getFullYear() === year){
@@ -68,14 +68,15 @@ exports.saveSerialInOrders = async (req, res) => {
  
   serials.map( async serial=>{
     // getting id of the serial
-    var id = await Serial.findOne({$and:[{pid:req.params.model_id},{$or: [{number: serial}, {sid: serial}]}]})
+    var id = (await Serial.findOne({$and:[{pid:req.params.model_id},
+      {$or: [{number: serial}, {sid: serial}]}]})).toJSON()
     if(id.pid == req.params.model_id){
       serial_id.push(id._id) 
     }
   })
   
   // setting serials in order
-  var docs = await Order.findOne({ _id: req.params.oid })
+  var docs = (await Order.findOne({ _id: req.params.oid })).toJSON()
   docs.cart.map(item=>{
     if(item._id == req.params.item_id){
       item.serials = serial_id
@@ -93,7 +94,7 @@ exports.addSerialToProductPage = (req, res) => {
   get_orders({ _id: req.params.oid }, order => {
     Product.findOne({ _id: req.params.pid }, async function(err, docs) {
 
-      let serial = await Serial.find({ $and: [{ pid: req.params.pid} , {status: 'In Stock'}] })
+      let serial = (await Serial.find({ $and: [{ pid: req.params.pid} , {status: 'In Stock'}] })).map(doc=>{ return doc.toJSON() })
       res.render('orders/setSerialInOrder', {
         order: order[0],
         model: req.params.pid,
@@ -144,7 +145,7 @@ var get_orders = (condition, cb)=>{
   .populate("cart.product")
   .populate("user")
   .populate('cart.serials')
-  .exec((err, rs)=>{ cb(rs); })
+  .exec((err, rs)=>{ cb(rs.map(user=>{ return user.toJSON() })); })
 }
 
 
@@ -157,7 +158,7 @@ exports.showOrderDetails = (req, res) => {
         rs[0].cart[i].totalAmount = rs[0].totalAmount
       }
      
-      var invoice = await Invoice.findOne({ order:rs[0]._id })
+      var invoice = (await Invoice.findOne({ order:rs[0]._id })).toJSON()
       rs[0].invoice = invoice;
      
       res.render('orders/orderDetails', { order: rs[0], or_id: req.params.id })
@@ -195,7 +196,7 @@ exports.updateHistory =async (req, res) => {
       else {
         // if the status is Delivered all the serial number's status of this order will be changed to delivered 
         if(status === "Delivered"){
-          var invoice = await Invoice.findOne({ order:rs2._id })
+          var invoice = (await Invoice.findOne({ order:rs2._id })).toJSON()
   
           rs2.cart.map( item=>{
             item.serials.map(async serial=>{

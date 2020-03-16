@@ -11,7 +11,7 @@ const Brand = require('../models/brand.model');
 
 
 exports.deleteProduct =async (req, res)=>{
-  let lp = await LP.findOne({_id: req.params.lpid})
+  let lp = (await LP.findOne({_id: req.params.lpid})).toJSON()
   
   let products = lp.products.filter((pro)=> pro.product != req.params.pid)
   lp.products = products
@@ -31,10 +31,10 @@ exports.deleteProduct =async (req, res)=>{
 exports.LocalPurchasePage =async (req, res) => { 
   let today = new Date()
   let date =(today.getMonth()+1) +' / '+today.getDate()+' / '+ today.getFullYear()
-  let supplier =  await Supplier.find()
-  let cat = await Category.find()
-  let categories = await SubCategory.find()
-  let brand = await Brand.find()
+  let supplier =  (await Supplier.find()).map(doc=>{ return doc.toJSON() })
+  let cat = (await Category.find()).map(doc=>{ return doc.toJSON() })
+  let categories =( await SubCategory.find()).map(doc=>{ return doc.toJSON() })
+  let brand = (await Brand.find()).map(doc=>{ return doc.toJSON() })
 
   res.render('purchase/localPurchase',{ date, Supplier: supplier, cat, categories, brand })
 }
@@ -42,7 +42,7 @@ exports.LocalPurchasePage =async (req, res) => {
 
 // product list a purchase
 exports.productList = async (req, res)=>{
-  var lp = await LP.findOne({_id: req.params._id}).populate('products.product')
+  var lp = (await LP.findOne({_id: req.params._id}).populate('products.product')).toJSON()
  
   res.render('purchase/productList', { products: lp.products })
 }
@@ -50,7 +50,7 @@ exports.productList = async (req, res)=>{
 
 // list of local purchase
 exports.getLPList = async (req, res) =>{
-  var lp = await LP.find().populate('supplier').sort({ "date": -1 })
+  var lp = (await LP.find().populate('supplier').sort({ "date": -1 })).map(doc=>{ return doc.toJSON() })
   var count = 1;
   lp.map( doc=> doc.count = count++ )
   res.render('purchase/allPurchase', { lp })
@@ -77,11 +77,11 @@ exports.getProducts = (req, res) => {
     .populate('supplier')
     .exec(async (err, doc) => 
     {
-     
+     doc = doc.map(user=>{ return user.toJSON() })
       var doc_serial = { lp: doc, serials: [] }
       
       for(var i=0; i< doc.products.length; i++){
-        var docs = await Serials.find({$and:[{pid: doc.products[i].product._id},{lp:req.params.invc} ] })
+        var docs = ( await Serials.find({$and:[{pid: doc.products[i].product._id},{lp:req.params.invc} ] })).map(doc=>{ return doc.toJSON() })
         doc_serial.serials.splice(doc_serial.serials.length-1, 0, ...docs)
        
           // doc_serial.serials.push(docs)
@@ -110,16 +110,16 @@ exports.LocalPurchaseLPPage = (req, res) => {
     })
     .populate('supplier')
     .exec(async (err, doc) => {
-      console.log(doc)
+      doc = doc.map(user=>{ return user.toJSON() })
       var count = 1;
 
       for (var i = 0; i < doc.products.length; i++) {
         doc.products[i].num = count;
         count++;
       }
-      let cat = await Category.find()
-      let categories = await SubCategory.find()
-      let brand = await Brand.find()
+      let cat = (await Category.find()).map(doc=>{ return doc.toJSON() })
+      let categories =( await SubCategory.find()).map(doc=>{ return doc.toJSON() })
+      let brand = (await Brand.find()).map(doc=>{ return doc.toJSON() })
 
       res.render('purchase/localPurchase', { lp: doc, cat, categories, brand });
     });
@@ -142,8 +142,8 @@ exports.SaveLocalPurchase = async (req, res) => {
   
   await Category.updateOne({_id: cat[0]}, {$addToSet:{ brands: brand[0]} },{ upsert: true })
   
-  var pro = await Product.findOne({ model: model1 });
-  var lp = await LP.findOne({ number });
+  var pro = (await Product.findOne({ model: model1 })).toJSON()
+  var lp = (await LP.findOne({ number })).toJSON()
 
 
   // if the fetched product is null insert the product

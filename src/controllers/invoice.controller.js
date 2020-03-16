@@ -10,6 +10,7 @@ exports.showInvoiceList = (req, res)=>{
     .populate('user')
     .populate('order')
     .exec((err, invoices)=>{
+        invoices = invoices.map(doc=>{ return doc.toJSON() })
         var count = 1;
         invoices.map( doc=> doc.count = count++ )
         res.render('orders/invoiceList',{ invoices })

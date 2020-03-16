@@ -27,13 +27,13 @@ exports.NewCouponPage = ( req, res )=> res.render('promotions/newCoupon')
 
 
 exports.CouponEdit =async (req, res)=>{
-    let coupon = await Coupon.findOne({ _id: req.params.id })
+    let coupon = (await Coupon.findOne({ _id: req.params.id })).toJSON()
     res.render('promotions/updateCoupon',{ coupon })
 }
 
 
 exports.SaveCoupon =async (req, res) =>{ 
-    let exist_coupon =await Coupon.findOne({code: req.body.code})
+    let exist_coupon = (await Coupon.findOne({code: req.body.code})).toJSON()
    
     if(exist_coupon){
         res.render('promotions/NewCoupon',{coupon: req.body, error_msg: 'Coupon code already exists!!'})
@@ -57,13 +57,13 @@ exports.SaveCoupon =async (req, res) =>{
 
 
 exports.updateDiscountPage = async (req, res)=>{
-    let discount = await Discount.findOne({ _id: req.params.id })
+    let discount = (await Discount.findOne({ _id: req.params.id })).toJSON()
     res.render('promotions/updateDiscount',{ discount })
 }
 
 
 exports.updateBundlePage=async (req, res)=>{
-    let bundle = await Bundle.findOne({ _id: req.params.id }).populate('products')
+    let bundle = (await Bundle.findOne({ _id: req.params.id }).populate('products')).toJSON()
     if(bundle.products){
         var total = 0;
         bundle.products.map(product=>{
@@ -71,7 +71,7 @@ exports.updateBundlePage=async (req, res)=>{
         })
     }
     bundle.total = total
-    let product = await Product.find()
+    let product = (await Product.find()).map(doc=>{ return doc.toJSON() })
     res.render('promotions/updateBundle',{ bundle, product })
 }
 
@@ -149,7 +149,7 @@ exports.SaveUpdateBundle= async(req, res)=>{
 
 
 exports.DiscountList = async (req, res)=>{
-    let discount =await Discount.find()
+    let discount = (await Discount.find()).map(doc=>{ return doc.toJSON() })
     var count = 1;
     discount.map( doc=> doc.count = count++ )
     res.render('promotions/listDiscount', { discount })
@@ -174,7 +174,7 @@ exports.enableDisableCoupon= async (req, res)=>{
 
 
 exports.BundleProductsDelete =async (req, res)=>{
-    let bundle = await Bundle.findOne({ _id: req.params.id })
+    let bundle = (await Bundle.findOne({ _id: req.params.id })).toJSON()
     bundle.products=bundle.products.filter(product=> JSON.stringify(product) != JSON.stringify(req.params.pid))
     await new Bundle(bundle).save()
     res.redirect('/promotions/updateBundle/'+req.params.id)
@@ -185,7 +185,7 @@ exports.newBundleOffer = async (req, res)=> res.render('promotions/newBundleOffe
 
 
 exports.BundleList = async (req, res)=>{
-    let bundle =await Bundle.find()
+    let bundle = (await Bundle.find()).map(doc=>{ return doc.toJSON() })
     var count = 1;
     bundle.map( doc=> doc.count = count++ )
     res.render('promotions/listBundle', { bundle })
@@ -193,7 +193,7 @@ exports.BundleList = async (req, res)=>{
 
 
 exports.CouponList = async (req, res)=>{
-    let coupon =await Coupon.find().populate('createdBy')
+    let coupon = (await Coupon.find().populate('createdBy')).map(doc=>{ return doc.toJSON() })
     var count = 1;
     coupon.map( doc=> doc.count = count++ )
     res.render('promotions/listCoupon', { coupon })
@@ -225,7 +225,7 @@ exports.SaveUpdateBundlePrice =async (req, res)=>{
 
 exports.bundleImage =async (req, res)=>{
     let filename =req.file.filename
-    let bundle = await Bundle.findOne({_id:req.body.id})
+    let bundle = (await Bundle.findOne({_id:req.body.id})).toJSON()
     let pre_file = bundle.image.split('image/')[1]
    
     gfs.remove({ pre_file },(err)=>{
@@ -238,8 +238,8 @@ exports.bundleImage =async (req, res)=>{
 }
 
 exports.addProduct =async (req, res)=>{
-    let bundle = await Bundle.findOne({ _id: req.body.id })
-    let product = await Product.findOne({_id:req.body.product})
+    let bundle = (await Bundle.findOne({ _id: req.body.id })).toJSON()
+    let product = (await Product.findOne({_id:req.body.product})).toJSON()
 
     bundle.products.push(req.body.product)
    

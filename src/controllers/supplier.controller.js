@@ -26,7 +26,7 @@ exports.supplierSave = (req, res) => {
 
 // get all registered suppliers
 exports.supplierList = async(req, res) => {
-  var supplier = await Supplier.find().sort({ "created": -1 })
+  var supplier = (await Supplier.find().sort({ "created": -1 })).map(doc=>{ return doc.toJSON() })
   var count = 1;
   supplier.map( doc=> doc.count = count++ )
   res.render('supplier/supplierList', { supplier }) 
@@ -36,6 +36,7 @@ exports.supplierList = async(req, res) => {
 // get all registered suppliers
 exports.supplierEditPage = (req, res) => {
   Supplier.findOne({ _id: req.params.id }, (err, docs) => {
+    docs = docs.map(user=>{ return user.toJSON() })
     if ( docs.address != null && docs.contactPerson != null ) {
      
       res.render('supplier/supplierEdit', {
@@ -65,4 +66,4 @@ exports.supplierDelete = (req, res) => {
 
 
 // getting contanct persons of a specific supplier
-exports.getContactPerson = async (req, res)=> res.send( await Supplier.findOne({ _id: req.params.sup }))
+exports.getContactPerson = async (req, res)=> res.send( (await Supplier.findOne({ _id: req.params.sup })).toJSON())

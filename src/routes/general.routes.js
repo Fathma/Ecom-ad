@@ -8,13 +8,20 @@ const general = require('../controllers/general.controller')
 const { ensureAuthenticated } = require("../helpers/auth");
 
 
-
 router.get('/dashboard', general.getAllNotification)
-router.get('/showDashboard',  ensureAuthenticated , general.showDashboard)
-router.get('/bestSellers', ensureAuthenticated, general.bestSellers)
-router.get('/productNeverSold',ensureAuthenticated, general.productNeverSold)
-router.get('/profitByProductCost',ensureAuthenticated, general.profitByProductCost)
-router.post('/profitProductWiseByMonth',ensureAuthenticated, general.profitProductWiseByMonth)
+router.get('/showDashboard',   general.showDashboard)
+router.get('/bestSellers',  general.bestSellers)
+router.get('/productNeverSold', general.productNeverSold)
+router.get('/profitByProductCost', general.profitByProductCost)
+router.post('/profitProductWiseByMonth', general.profitProductWiseByMonth)
+
+
+// router.get('/dashboard', general.getAllNotification)
+// router.get('/showDashboard',  ensureAuthenticated , general.showDashboard)
+// router.get('/bestSellers', ensureAuthenticated, general.bestSellers)
+// router.get('/productNeverSold',ensureAuthenticated, general.productNeverSold)
+// router.get('/profitByProductCost',ensureAuthenticated, general.profitByProductCost)
+// router.post('/profitProductWiseByMonth',ensureAuthenticated, general.profitProductWiseByMonth)
 
 // router.get('/image/:filename',ensureAuthenticated, general.getImage)
 

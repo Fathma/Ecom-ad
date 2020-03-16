@@ -67,6 +67,7 @@ exports.specificationMakeTrue =async (req, res)=>{
 exports.SpecificationsSave = (req, res)=>{
   // check whether it is already exists or not 
   Specification.findOne({ name: req.body.specification}, (err, specifications)=>{
+    specifications = specifications.toJSON()
     if(!specifications){
       let obj = {
         name: req.body.specification,
@@ -94,7 +95,7 @@ exports.SpecificationsSave = (req, res)=>{
 
 //  shows list od specification
 exports.Specifications =async (req, res)=>{
-  var specifications = await Specification.find().populate('createdBy')
+  var specifications = (await Specification.find().populate('createdBy')).map(user=>{ return user.toJSON() })
   var count = 1;
   specifications.map( doc=> doc.count = count++ )
   res.render('products/specifications',{ specifications })
@@ -104,7 +105,7 @@ exports.Specifications =async (req, res)=>{
 // save shipping in fo of a product
 exports.shippingSave = async(req, res)=>{
   
-  let prod = await Product.findOne({ _id: req.body.pid })
+  let prod = (await Product.findOne({ _id: req.body.pid })).toJSON()
   let shippingInfo = {
     weight: req.body.weight,
     height: req.body.height,
@@ -130,7 +131,7 @@ exports.SavePrice =async (req, res)=>{
 
 // added attribute to a product
 exports.SaveAttribute = async (req, res)=>{
-  let prod = await Product.findOne({ _id: req.body.pid })
+  let prod = (await Product.findOne({ _id: req.body.pid })).toJSON()
   let attribute = {
     label: req.body.label,
     value: req.body.value
@@ -151,7 +152,7 @@ exports.SaveHomePageTag = async (req, res)=>{
 
 // deletes an attribute from a product
 exports.deleteAttribute = async (req, res)=>{
-  let prod = await Product.findOne({ _id: req.params._id })
+  let prod = (await Product.findOne({ _id: req.params._id })).toJSON()
 
   prod.features = prod.features.filter(function(feature, index, arr){
     return feature.label.toString() !== req.params.label;
@@ -167,7 +168,7 @@ exports.deleteAttribute = async (req, res)=>{
 // saves related products to a product
 exports.relatedProducts1 =async (req, res)=>{
   let _id = req.body.pid;
-  let prod = await Product.findOne({_id})
+  let prod = (await Product.findOne({_id})).toJSON()
   if(prod.relatedProducts.includes(req.body.relatedProducts)){
     res.redirect('/products/Update/'+_id)
   }else{
@@ -182,7 +183,7 @@ exports.relatedProducts1 =async (req, res)=>{
 // deletes a related product
 exports.relatedProductsDelete1 = async(req, res)=>{
   // delete_related (req)
-  let product = await Product.findOne({ _id: req.params.pid })
+  let product = (await Product.findOne({ _id: req.params.pid })).toJSON()
   
   let el = product.relatedProducts.filter((ele)=>{
     return ele != req.params.rid
@@ -199,17 +200,23 @@ exports.viewProducts = (req, res)=>{
   Product.find().sort({'created': -1})
   .select({ productName:1, model: 1, sellingPrice: 1, isActive:1, availablity: 1, dealer: 1, _id:1 })
   .exec((err, products)=>{
+    products = products.map(user=>{ return user.toJSON() })
     var count = 1;
     products.map( doc=> doc.count = count++ )
-    res.render('products/viewProducts', { products })
+    res.render('products/viewProducts', { products})
   })
 }
 
 // get Product update page
 exports.getProductUpdatePage = async(req, res)=>{
-  let product = await Product.findOne({ _id: req.params._id }).populate('relatedProducts').populate('features.label').populate('category').populate('subcategory')
-  let specifications = await Specification.find({ enabled: true})
-  let discount = await Discount.find({ type: "product" })
+  let product = (await Product.findOne({ _id: req.params._id })
+  .populate('relatedProducts')
+  .populate('features.label')
+  .populate('category')
+  .populate('subcategory')).toJSON()
+
+  let specifications = (await Specification.find({ enabled: true})).map(doc=>{ return doc.toJSON() })
+  let discount = (await Discount.find({ type: "product" })).map(doc=>{ return doc.toJSON() })
   let cat = product.category
   let sub = product.subcategory
   let motherboard = false
@@ -222,7 +229,7 @@ exports.getProductUpdatePage = async(req, res)=>{
       ram = true
     }
   }
-  let pro = await Product.find()
+  let pro = (await Product.find()).map(doc=>{ return doc.toJSON() })
 
   res.render('products/update',{ product, feature_total: product.features.length, specifications, motherboard, ram, discount, Product:pro})
 }
@@ -258,7 +265,7 @@ exports.checkSerials = async(req, res)=>{
 
   var arr = req.body.serial_array
   var exists = [];
-  var serials = await Serial.find({ pid: req.body.pid })
+  var serials = (await Serial.find({ pid: req.body.pid })).map(doc=>{ return doc.toJSON() })
   
   serials.map( serial =>{
     if(arr.includes(serial.number)){
@@ -297,15 +304,15 @@ exports.deteteImg = (req, res)=>{
 
 // In-house stock product entry page
 exports.getInhouseInventoryPage =async (req, res) => {
-  let localPurchase = await LocalPurchase.find()
+  let localPurchase = (await LocalPurchase.find()).map(doc=>{ return doc.toJSON() })
   res.render('products/InhouseStockProduct',{ LocalPurchase: localPurchase });
 }
 
 // dealer stock product entry page
 exports.getDealerInventoryPage =async (req, res) =>{
-  let cat = await Category.find()
-  let categories = await SubCategory.find()
-  let brand = await Brand.find()
+  let cat = (await Category.find()).map(doc=>{ return doc.toJSON() })
+  let categories = (await SubCategory.find()).map(doc=>{ return doc.toJSON() })
+  let brand = (await Brand.find()).map(doc=>{ return doc.toJSON() })
   res.render('products/dealerProduct',{cat, categories, brand})
 } 
 
@@ -340,6 +347,7 @@ exports.showProductRegistrationFields =async (req, res, next) => {
   
   // get all the features of cat sub and brand
   Product.find(obj, function(err, pros){
+    pros = pros.map(user=>{ return user.toJSON() })
       var features = []
       if(!pros){
         pros.map( (product)=>{
@@ -350,6 +358,7 @@ exports.showProductRegistrationFields =async (req, res, next) => {
       }
     // checks whether the model already exists or not
     Product.findOne({ model: model }, ( err, result )=>{
+      result = result.toJSON()
       if( !result ){
         new Product( product ).save().then( product => res.render('products/dealerProduct',{ product, features, feature_total: features.length }))
       }
@@ -370,7 +379,8 @@ var changeStatus = (condition,  object, res, cb) => {
 
 //find fuction from product collection
 var find = (obj, cb) => {
-  Product.find(obj).populate("brand").populate("admin").populate("subcategory").populate("category").exec(function(err, docs) { cb(docs); });
+  Product.find(obj).populate("brand").populate("admin").populate("subcategory").populate("category")
+  .exec(function(err, docs) { cb(docs.map(user=>{ return user.toJSON() })); });
 };
 
 // returns Edit page from product info
@@ -416,7 +426,7 @@ exports.getSerials = (req, res)=>{
   .populate('lp')
   .populate('invoice')
   .exec((err, serials)=>{
-    
+    serials = serials.map(user=>{ return user.toJSON() })
     var count = 1;
     serials.map( doc=>
       {
@@ -432,11 +442,12 @@ exports.getSerials = (req, res)=>{
 // show all the products and their quantity with low stock
 exports.viewLowQuantityProducts = async (req, res)=>{
  
-  var products = await Product.find()
+  var products = (await Product.find()).map(doc=>{ return doc.toJSON() })
   var serials = []
   var count = 1;
   for(var i = 0; i< products.length;i++){
-    var data = await Serial.find({ $and: [{pid: products[i]._id },{status:'In Stock' }]}).populate('pid').populate('lp').populate('invoice')
+    var data = (await Serial.find({ $and: [{pid: products[i]._id },
+      {status:'In Stock' }]}).populate('pid').populate('lp').populate('invoice')).map(doc=>{ return doc.toJSON() })
     
     if(data.length < 5){
       var obj = {

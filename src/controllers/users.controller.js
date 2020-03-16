@@ -77,6 +77,7 @@ exports.logout = (req, res) => {
 // shows all user
 exports.getUsers = (req, res)=>{
   User.find((err, users)=>{
+    users = users.map(user=>{ return user.toJSON() })
     var count = 1;
     users.map( doc=> doc.count = count++ )
     res.render('users/viewUserList',{users})
@@ -86,7 +87,11 @@ exports.getUsers = (req, res)=>{
 
 // edit user update page
 exports.edit = (req, res)=>{
-  User.findOne({ _id: req.params.id }, (err, user)=> res.render('users/updateUser',{ user }))
+  User.findOne({ _id: req.params.id }, (err, user)=> 
+  {
+    user = user.toJSON()
+    res.render('users/updateUser',{ user })
+  })
 }
 
 // save edit
@@ -100,7 +105,7 @@ exports.saveEdit = (req, res)=>{
 
 // show user profile
 exports.profile = async (req, res)=>{
-  let user =await User.findOne({ _id: req.params.id })
+  let user = (await User.findOne({ _id: req.params.id })).toJSON()
   res.render('users/profile', { user })
 }
 
@@ -108,7 +113,7 @@ exports.profile = async (req, res)=>{
 // changing user password by sending a temporary link to the use email
 exports.changePass = async (req, res)=>{
   try{
-    let user = await User.findOne({_id: req.params.id})
+    let user = (await User.findOne({_id: req.params.id})).toJSON()
     
     jwt.sign({ user: _.pick(user, '_id') }, keys.jwt.secret, { expiresIn:'1h' }, async (err, token)=> {
       let url = `http://localhost:3000/users/changePassPage/${token}`

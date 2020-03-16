@@ -11,29 +11,32 @@ const value= require('../../config/values')
 // simply fires a page
 exports.newCategory= (req, res) => res.render('parents/newCategory')
 exports.newBrand= (req, res) => res.render('parents/newBrand')
-exports.newSubCategory= (req, res) => res.render('parents/newSubCategory')
+exports.newSubCategory= async(req, res) => {
+  var catt = (await Cat.find()).map(user=>{ return user.toJSON() })
+  res.render('parents/newSubCategory', { cat: catt })
+}
 
 
 exports.updateCategory = async (req, res) => {
-  let category = await Cat.findOne({ _id: req.params.id })
-  let discount = await Discount.find({type:"category"})
+  let category = (await Cat.findOne({ _id: req.params.id })).toJSON() 
+  let discount = (await Discount.find({type:"category"})).map(user=>{ return user.toJSON() })
   req.flash( 'success_msg', value.update.succ)
   res.render('parents/updateCategory', { category, discount })
 }
 
 
 exports.updateSubCategory = async (req, res) => {
-  let subcategory = await subCategory.findOne({ _id: req.params.id })
-  let discount = await Discount.find({type:"subcategory"})
-  let cat = await Cat.find()
+  let subcategory = (await subCategory.findOne({ _id: req.params.id })).toJSON() 
+  let discount = (await Discount.find({type:"subcategory"})).map(user=>{ return user.toJSON() })
+  let cat = (await Cat.find()).map(user=>{ return user.toJSON() })
   req.flash( 'success_msg', value.update.succ)
   res.render('parents/updateSubCategory', { subcategory, discount, cat })
 }
 
 
 exports.updateBrand = async (req, res) => {
-  let brand = await Brand.findOne({ _id: req.params.id })
-  let discount = await Discount.find({type:"brand"})
+  let brand = (await Brand.findOne({ _id: req.params.id })).toJSON() 
+  let discount = (await Discount.find({type:"brand"})).map(doc=>{ return doc.toJSON() })
   res.render('parents/updateBrand', { brand, discount })
 }
 
@@ -83,7 +86,7 @@ exports.SaveDiscountSubCategory = async (req, res) => {
 // saving category
 exports.addCategory =async (req, res) => {
   //  check whether already exists or not
-  let category= await Cat.findOne({ name: req.body.name })
+  let category= (await Cat.findOne({ name: req.body.name })).toJSON() 
   if(!category){
     req.body.subCategories= []
     req.body.brands= []
@@ -101,7 +104,7 @@ exports.addCategory =async (req, res) => {
 // Saving Sub Category
 exports.addSubCategory =async (req, res) => {
   //  check whether already exists or not
-  let sub =await subCategory.findOne({name:req.body.subCat})
+  let sub = (await subCategory.findOne({name:req.body.subCat})).toJSON() 
   if(!sub){
     let subcategory = {
       name: req.body.subCat,
@@ -117,6 +120,7 @@ exports.addSubCategory =async (req, res) => {
         { upsert: true },
         ( err, cat )=> {
           if ( err ) res.send( err ) 
+          cat = cat.toJSON()
           req.flash( 'success_msg', 'Category added successfully!')
           res.redirect('/category/updateSubCategory/'+cat._id)
         }
@@ -132,7 +136,7 @@ exports.addSubCategory =async (req, res) => {
 // Saving Brand
 exports.addBrand =async ( req, res ) => {
   //  check whether already exists or not
-  let br = await Brand.findOne({ name: req.body.brand })
+  let br = (await Brand.findOne({ name: req.body.brand })).toJSON() 
   if(!br){
     let brand = { name: req.body.brand }
     new Brand( brand ).save().then( brand =>{
@@ -151,7 +155,10 @@ exports.getSubById = (req, res) => {
   Cat.find({ _id: req.params.cat })
     .populate('subCategories')
     .populate('brands')
-    .exec(( err, docs )=> res.json( docs ))
+    .exec(( err, docs )=> {
+      docs= docs.map(user=>{ return user.toJSON() }) 
+      res.json( docs)
+    })
 }
 
 
@@ -159,7 +166,10 @@ exports.getSubById = (req, res) => {
 exports.getBrand = ( req, res )=> {
   subCategory.find({ name: req.params.subcat })
   .populate('brands')
-  .exec(( err, docs )=> res.json( docs ))
+  .exec(( err, docs )=> {
+    docs= docs.map(user=>{ return user.toJSON() }) 
+    res.json( docs )
+  })
 }
 
 
@@ -196,16 +206,16 @@ exports.edit_cat =async(req, res)=>{
 
 // shows category list
 exports.categoryList = async( req, res )=> {
-  var category = await Cat.find()
-  var count = 1;
-  category.map( doc=> doc.count = count++ )
+  var category = (await Cat.find()).map(user=>{ return user.toJSON() })
+  var count = 1
+  category.map( doc=> doc.count = count++  )
   res.render('parents/categoryList', { category })
 }
 
 
 // shows subcategory list
 exports.subCategoryList = async( req, res )=>{
-  var subcategory =  await subCategory.find().populate('category')
+  var subcategory =  (await subCategory.find().populate('category')).map(user=>{ return user.toJSON() })
   var count = 1;
   subcategory.map( doc=> doc.count = count++ )
   res.render('parents/subCategoryList', { subcategory })
@@ -214,7 +224,7 @@ exports.subCategoryList = async( req, res )=>{
 
 // shows brand List 
 exports.brandList = async( req, res )=>{
-  var brand = await Brand.find()
+  var brand = (await Brand.find()).map(user=>{ return user.toJSON() })
   var count = 1;
   brand.map( doc=> doc.count = count++ )
   res.render('parents/brandList', { brand })

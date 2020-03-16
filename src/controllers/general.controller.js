@@ -13,15 +13,15 @@ const Post = require('../models/posts.model')
 
 // get all the data for notification and dashboard
 async function notification( cb ){
-  let orders = await Order.find({ currentStatus: 'New Order'})
-  let newPost = await Post.find({ status: 'New'})
-  let products = await Product.find()
+  let orders = (await Order.find({ currentStatus: 'New Order'})).map(doc=>{ return doc.toJSON() })
+  let newPost = (await Post.find({ status: 'New'})).map(doc=>{ return doc.toJSON() })
+  let products = (await Product.find()).map(doc=>{ return doc.toJSON() })
 
   var count = 0
   var total_low = 0
 
   for( var i = 0; i< products.length; i++ ){
-    var amount = await Serial.find({ $and: [{ pid: products[i]._id }, { status: 'In Stock' }] })
+    var amount = (await Serial.find({ $and: [{ pid: products[i]._id }, { status: 'In Stock' }] })).map(doc=>{ return doc.toJSON() })
     if( amount.length < 5 ) total_low++
   }
   
@@ -67,7 +67,7 @@ var find_duplicate_in_array = (arra1, cb)=> {
 }
 
 var orderedProducts =async (cb)=>{
-  var orders = await Order.find().populate('cart.product')
+  var orders = (await Order.find().populate('cart.product')).map(user=>{ return user.toJSON() })
   let cart=[]
   orders.map(order=>{
     order.cart.map(item=>{
@@ -116,7 +116,7 @@ exports.bestSellers= async(req, res) => {
 // get products which have never been sold
 exports.productNeverSold = async(req, res) => {
   orderedProducts(async unique=>{
-    let products = await Product.find()
+    let products = (await Product.find()).map(user=>{ return user.toJSON() })
     let productleft = products.filter(product=>{
       var bool = false
       unique.map(un=>{
@@ -160,7 +160,7 @@ function processProfitByProduct (serial, res){
 
 
 exports.profitByProductCost =async (req, res)=>{
-  let serial = await Serial.find({status: 'Delivered'}).populate('lp').populate('pid')
+  let serial = (await Serial.find({status: 'Delivered'}).populate('lp').populate('pid')).map(user=>{ return user.toJSON() })
   .populate({
           path: "invoice",
           populate: { path: "order" }
@@ -174,7 +174,7 @@ exports.profitProductWiseByMonth =async (req, res)=>{
   let year =parseInt(req.body.startDate.split('/')[1], 10)
   
   
-  let serial = await Serial.find({status: 'Delivered'}).populate('lp').populate('pid')
+  let serial = (await Serial.find({status: 'Delivered'}).populate('lp').populate('pid')).map(user=>{ return user.toJSON() })
   .populate({
     path: "invoice",
     populate: { path: "order" }
